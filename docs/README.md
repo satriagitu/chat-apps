@@ -91,3 +91,62 @@ docker compose up --build
 
 ## Test
 Lakukan test endpoint sesuai dokumentasi OpenAPI / Swagger.
+
+###
+(Artikel)
+Menu int
+SubMenu int
+Title string
+Image string
+Time time.Time
+Like int
+Comment int
+User string
+Post string
+
+(Comment)
+id int 
+id_artikel int
+comment string
+
+(Menu)
+id int
+menu string
+
+(SubMenu)
+id int
+submenu string
+
+
+Endpoint & Parameter & Sample Response
+
+GET list-artikel
+response
+{
+    "menu": "artikel",
+    "sub_menu": "sma skul id",
+    "title":"hari pendidikan",
+    "image":"image.png",
+    "time":18,
+    "like":50,
+    "comment":10,
+}
+
+GET detail-artikel
+response
+{
+    "menu": "artikel",
+    "sub_menu": "sma skul id",
+    "title":"hari pendidikan",
+    "image":"image.png",
+    "time":18,
+    "user":"admin sekolah"
+    "post":"lorem ipsum"
+}
+
+POST create-like
+response
+{
+    "like":51
+}
+

@@ -47,6 +47,10 @@ func NewRouter() *gin.Engine {
 	jobController := controller.NewJobController(jobService)
 	notificationController := controller.NewNotificationController(notificationService)
 
+	artikeRepo := repository.NewArtikelRepository(db)
+	artikelService := service.NewArtikelService(artikeRepo)
+	artikelController := controller.NewArticleController(artikelService)
+
 	r := gin.Default()
 
 	r.POST("/users", userController.CreateUser)
@@ -66,6 +70,8 @@ func NewRouter() *gin.Engine {
 
 	r.POST("/notifications/broadcast", jobController.QueueBroadcastNotification)
 	r.GET("/jobs/:id", jobController.GetJobStatus)
+
+	r.GET("/article-list", artikelController.GetArticleList)
 
 	notificationWorker := util.NewNotificationWorker(notificationRepo, userRepo, jobRepo)
 	if err := rabbitmq.StartConsumer(ch, q.Name, notificationWorker); err != nil {

@@ -43,6 +43,10 @@ func NewDB() (*gorm.DB, error) {
 		&domain.Job{},
 		&domain.Message{},
 		&domain.Notification{},
+		&domain.Article{},
+		&domain.Menu{},
+		&domain.SubMenu{},
+		&domain.Comment{},
 	)
 
 	return db, nil

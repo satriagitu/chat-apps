@@ -19,6 +19,8 @@ tags:
     description: Endpoints related to file management
   - name: Conversations
     description: Endpoints related to conversations
+  - name: Articles
+    description: Endpoints related to articles
 
 paths:
   /users:
@@ -656,3 +658,51 @@ paths:
                 properties:
                   error:
                     type: string
+
+  /article-list:
+    get:
+      tags:
+        - Articles
+      summary: Get list articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Articles found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    menu:
+                      type: string
+                    sub_menu:
+                      type: string
+                    title:
+                      type: string
+                    image:
+                      type: string
+                    time_ago:
+                      type: string
+                    likes:
+                      type: integer
+                    comment_count:
+                      type: integer
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
