@@ -1,8 +1,8 @@
-// repository/conversation_repository_test.go
-package repository
+package repository_test
 
 import (
 	"chat-apps/internal/domain"
+	"chat-apps/internal/repository"
 	"testing"
 	"time"
 
@@ -22,7 +22,7 @@ func TestCreateConversation(t *testing.T) {
 		t.Fatal("failed to migrate database")
 	}
 
-	repo := NewConversationRepository(db)
+	repo := repository.NewConversationRepository(db)
 	participants := []int{1, 2, 3}
 	resp, err := repo.CreateConversation(participants)
 
@@ -42,7 +42,7 @@ func TestGetConversationByID(t *testing.T) {
 		t.Fatal("failed to migrate database")
 	}
 
-	repo := NewConversationRepository(db)
+	repo := repository.NewConversationRepository(db)
 	conversation := domain.Conversation{CreatedAt: time.Now()}
 	db.Create(&conversation)
 	participants := []domain.ConversationParticipant{

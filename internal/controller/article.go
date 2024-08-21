@@ -18,7 +18,8 @@ func NewArticleController(as service.ArticleService) *ArticleController {
 }
 
 func (ac *ArticleController) GetArticleList(c *gin.Context) {
-	artikel, err := ac.ArticleService.GetArticleList()
+	search := c.Query("search")
+	artikel, err := ac.ArticleService.GetArticleList(search)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return

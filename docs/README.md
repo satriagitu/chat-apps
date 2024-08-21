@@ -92,61 +92,35 @@ docker compose up --build
 ## Test
 Lakukan test endpoint sesuai dokumentasi OpenAPI / Swagger.
 
-###
-(Artikel)
-Menu int
-SubMenu int
-Title string
-Image string
-Time time.Time
-Like int
-Comment int
-User string
-Post string
+## How to test (Unit Test)
+```bash
+-- test in spesific files
+go test -v internal/controller/article_test.go 
 
-(Comment)
-id int 
-id_artikel int
-comment string
+-- test in spesific files and specific functions
+go test -v internal/service/article_test.go -run ^TestArtik
+elService_GetArticleList_Error$
 
-(Menu)
-id int
-menu string
+-- percentage test -- 
+-- create converage test all file
+go test -coverprofile=coverage.out ./...
 
-(SubMenu)
-id int
-submenu string
+-- create covereage spesific file
+go test -coverprofile=coverage.out ./internal/controller
 
+-- view percentage coverage test
+go tool cover -func=coverage.out
 
-Endpoint & Parameter & Sample Response
+-- view percentage coverage test - spesific file
+go tool cover -func=coverage.out | grep "internal/repository/file.go"
 
-GET list-artikel
-response
-{
-    "menu": "artikel",
-    "sub_menu": "sma skul id",
-    "title":"hari pendidikan",
-    "image":"image.png",
-    "time":18,
-    "like":50,
-    "comment":10,
-}
+-- view percentage coverage test in html
+go tool cover -html=coverage.out
 
-GET detail-artikel
-response
-{
-    "menu": "artikel",
-    "sub_menu": "sma skul id",
-    "title":"hari pendidikan",
-    "image":"image.png",
-    "time":18,
-    "user":"admin sekolah"
-    "post":"lorem ipsum"
-}
+--- Generate Mock with Mockary ---
+mockery --dir=internal/repository --output=internal/repository/mocks --all
+mockery --dir=internal/service --output=internal/service/mocks --all
+mockery --name=ArticleRepository --dir=internal/repository --output=internal/repository/mocks
+mockery --name=ArticleService --dir=internal/service --output=internal/service/mocks
 
-POST create-like
-response
-{
-    "like":51
-}
-
+```

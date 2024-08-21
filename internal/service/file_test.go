@@ -5,53 +5,14 @@ import (
 	"chat-apps/internal/domain"
 	"testing"
 
+	"chat-apps/internal/repository/mocks"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-// MockUserRepository
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) ExistsByID(id int) (bool, error) {
-	args := m.Called(id)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockUserRepository) CreateUser(user domain.User) (domain.User, error) {
-	args := m.Called(user)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetAllUsers() ([]domain.User, error) {
-	args := m.Called()
-	return args.Get(0).([]domain.User), args.Error(1)
-}
-
-func (m *MockUserRepository) GetUserByID(id int) (domain.User, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-// MockFileRepository
-type MockFileRepository struct {
-	mock.Mock
-}
-
-func (m *MockFileRepository) UploadFile(file domain.File) (domain.File, error) {
-	args := m.Called(file)
-	return args.Get(0).(domain.File), args.Error(1)
-}
-
-func (m *MockFileRepository) GetFileByID(id int) (domain.File, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.File), args.Error(1)
-}
-
 func TestUploadFile(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockFileRepo := new(MockFileRepository)
+	mockUserRepo := new(mocks.UserRepository)
+	mockFileRepo := new(mocks.FileRepository)
 	fileService := NewFileService(mockFileRepo, mockUserRepo)
 
 	userID := 1
@@ -70,8 +31,8 @@ func TestUploadFile(t *testing.T) {
 }
 
 func TestUploadFile_UserNotFound(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockFileRepo := new(MockFileRepository)
+	mockUserRepo := new(mocks.UserRepository)
+	mockFileRepo := new(mocks.FileRepository)
 	fileService := NewFileService(mockFileRepo, mockUserRepo)
 
 	userID := 1
@@ -86,7 +47,7 @@ func TestUploadFile_UserNotFound(t *testing.T) {
 }
 
 func TestGetFileByID(t *testing.T) {
-	mockFileRepo := new(MockFileRepository)
+	mockFileRepo := new(mocks.FileRepository)
 	fileService := NewFileService(mockFileRepo, nil)
 
 	fileID := 1
@@ -99,4 +60,27 @@ func TestGetFileByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedFile, file)
 	mockFileRepo.AssertExpectations(t)
+}
+
+func TestExistByID_Error(t *testing.T) {
+	t.Run("test negatif - exist by id", func(t *testing.T) {
+		mockUserRepo := new(mocks.UserRepository)
+		mockFileRepo := new(mocks.FileRepository)
+
+		userID := 1
+		fileURL := "image.png"
+
+		mockUserRepo.On("ExistsByID", userID).Return(false, assert.AnError)
+		mockFileRepo.On("UploadFile", domain.File{
+			UserID:  userID,
+			FileURL: fileURL,
+		}).Return(domain.File{}, assert.AnError)
+
+		fileService := NewFileService(mockFileRepo, mockUserRepo)
+		file, err := fileService.UploadFile(userID, fileURL)
+
+		// test
+		assert.NotNil(t, err)
+		assert.Equal(t, domain.File{}, file)
+	})
 }

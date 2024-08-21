@@ -33,8 +33,20 @@ func (w *NotificationWorker) ProcessTask(delivery amqp.Delivery) {
 		return
 	}
 
-	jobID := int(payload["job_id"].(float64))
-	message := payload["message"].(string)
+	jobIDFloat, ok := payload["job_id"].(float64)
+	if !ok {
+		log.Printf("job_id is missing or invalid")
+		delivery.Nack(false, false)
+		return
+	}
+	jobID := int(jobIDFloat)
+
+	message, ok := payload["message"].(string)
+	if !ok {
+		log.Printf("message is missing or invalid")
+		delivery.Nack(false, false)
+		return
+	}
 
 	users, err := w.userRepo.GetAllUsers()
 	if err != nil {

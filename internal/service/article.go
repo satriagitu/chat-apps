@@ -7,7 +7,7 @@ import (
 )
 
 type ArticleService interface {
-	GetArticleList() ([]domain.ArticleList, error)
+	GetArticleList(search string) ([]domain.ArticleList, error)
 }
 
 type artikelService struct {
@@ -18,8 +18,8 @@ func NewArtikelService(ar repository.ArticleRepository) ArticleService {
 	return &artikelService{articleRepo: ar}
 }
 
-func (s *artikelService) GetArticleList() ([]domain.ArticleList, error) {
-	articles, err := s.articleRepo.GetArticleList()
+func (s *artikelService) GetArticleList(search string) ([]domain.ArticleList, error) {
+	articles, err := s.articleRepo.GetArticleList(search)
 	if err != nil {
 		return nil, err
 	}

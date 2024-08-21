@@ -1,6 +1,7 @@
-package rabbitmq
+package third_party
 
 import (
+	"chat-apps/internal/repository"
 	"chat-apps/internal/util"
 	"fmt"
 	"os"
@@ -8,22 +9,28 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func InitRabbitMQ() (*amqp.Connection, *amqp.Channel, amqp.Queue, error) {
+type RabbitMQ struct {
+	Connection *amqp.Connection
+	Channel    repository.RabbitMQChannel
+	Queue      amqp.Queue
+}
+
+func NewRabbitMQ() (*RabbitMQ, error) {
 	user := os.Getenv("RABBITMQ_USER")
 	pass := os.Getenv("RABBITMQ_PASS")
 	host := os.Getenv("RABBITMQ_HOST")
 	port := os.Getenv("RABBITMQ_PORT")
 	dial := fmt.Sprintf("amqp://%s:%s@%s:%s/", user, pass, host, port)
-	// dial := "amqp://guest:guest@rabbitmq:5672/"
+
 	conn, err := amqp.Dial(dial)
 	if err != nil {
-		return nil, nil, amqp.Queue{}, err
+		return nil, err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
 		conn.Close()
-		return nil, nil, amqp.Queue{}, err
+		return nil, err
 	}
 
 	q, err := ch.QueueDeclare(
@@ -37,14 +44,18 @@ func InitRabbitMQ() (*amqp.Connection, *amqp.Channel, amqp.Queue, error) {
 	if err != nil {
 		ch.Close()
 		conn.Close()
-		return nil, nil, amqp.Queue{}, err
+		return nil, err
 	}
 
-	return conn, ch, q, nil
+	return &RabbitMQ{
+		Connection: conn,
+		Channel:    ch,
+		Queue:      q,
+	}, nil
 }
 
-func StartConsumer(ch *amqp.Channel, queueName string, worker *util.NotificationWorker) error {
-	msgs, err := ch.Consume(
+func (r *RabbitMQ) StartConsumer(queueName string, worker *util.NotificationWorker) error {
+	msgs, err := r.Channel.Consume(
 		queueName,
 		"",
 		false,
@@ -62,6 +73,25 @@ func StartConsumer(ch *amqp.Channel, queueName string, worker *util.Notification
 			worker.ProcessTask(d)
 		}
 	}()
+
+	return nil
+}
+
+func (r *RabbitMQ) Close() error {
+	var err error
+	if r.Channel != nil {
+		err = r.Channel.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if r.Connection != nil {
+		err = r.Connection.Close()
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

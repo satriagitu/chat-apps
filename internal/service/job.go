@@ -19,10 +19,10 @@ type jobService struct {
 	jobRepo          repository.JobRepository
 	notificationRepo repository.NotificationRepository
 	userRepo         repository.UserRepository
-	rabbitMQChannel  *amqp.Channel
+	rabbitMQChannel  repository.RabbitMQChannel
 }
 
-func NewJobService(jr repository.JobRepository, nr repository.NotificationRepository, ur repository.UserRepository, ch *amqp.Channel) JobService {
+func NewJobService(jr repository.JobRepository, nr repository.NotificationRepository, ur repository.UserRepository, ch repository.RabbitMQChannel) JobService {
 	return &jobService{jobRepo: jr, notificationRepo: nr, userRepo: ur, rabbitMQChannel: ch}
 }
 

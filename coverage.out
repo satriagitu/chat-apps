@@ -1,0 +1,22 @@
+mode: set
+chat-apps/internal/third_party/rabbitmq.go:18.39,26.16 7 0
+chat-apps/internal/third_party/rabbitmq.go:26.16,28.3 1 0
+chat-apps/internal/third_party/rabbitmq.go:30.2,31.16 2 0
+chat-apps/internal/third_party/rabbitmq.go:31.16,34.3 2 0
+chat-apps/internal/third_party/rabbitmq.go:36.2,44.16 2 0
+chat-apps/internal/third_party/rabbitmq.go:44.16,48.3 3 0
+chat-apps/internal/third_party/rabbitmq.go:50.2,54.8 1 0
+chat-apps/internal/third_party/rabbitmq.go:57.91,67.16 2 1
+chat-apps/internal/third_party/rabbitmq.go:67.16,69.3 1 1
+chat-apps/internal/third_party/rabbitmq.go:71.2,71.12 1 1
+chat-apps/internal/third_party/rabbitmq.go:71.12,72.23 1 1
+chat-apps/internal/third_party/rabbitmq.go:72.23,74.4 1 1
+chat-apps/internal/third_party/rabbitmq.go:77.2,77.12 1 1
+chat-apps/internal/third_party/rabbitmq.go:80.34,82.22 2 1
+chat-apps/internal/third_party/rabbitmq.go:82.22,84.17 2 1
+chat-apps/internal/third_party/rabbitmq.go:84.17,86.4 1 0
+chat-apps/internal/third_party/rabbitmq.go:89.2,89.25 1 1
+chat-apps/internal/third_party/rabbitmq.go:89.25,91.17 2 0
+chat-apps/internal/third_party/rabbitmq.go:91.17,93.4 1 0
+chat-apps/internal/third_party/rabbitmq.go:96.2,96.12 1 1
+chat-apps/internal/third_party/redis.go:8.32,15.2 2 0

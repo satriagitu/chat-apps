@@ -1,74 +1,18 @@
-package service
+package service_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"chat-apps/internal/domain"
+	"chat-apps/internal/repository/mocks"
+	"chat-apps/internal/service"
 
+	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
-
-// Mock JobRepository
-type MockJobRepository struct {
-	mock.Mock
-}
-
-func (m *MockJobRepository) CreateJob(job domain.Job) (domain.Job, error) {
-	args := m.Called(job)
-	return args.Get(0).(domain.Job), args.Error(1)
-}
-
-func (m *MockJobRepository) GetJobByID(id int) (domain.Job, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.Job), args.Error(1)
-}
-
-func (m *MockJobRepository) UpdateJobStatus(id int, status string, completedAt time.Time) error {
-	args := m.Called(id, status, completedAt)
-	return args.Error(0)
-}
-
-// Mock NotificationRepository
-type MockNotificationsRepository struct {
-	mock.Mock
-}
-
-func (m *MockNotificationsRepository) CreateNotification(notification domain.Notification) (domain.Notification, error) {
-	args := m.Called(notification)
-	return args.Get(0).(domain.Notification), args.Error(1)
-}
-
-func (m *MockNotificationsRepository) GetNotificationsByUserID(userID int) ([]domain.Notification, error) {
-	args := m.Called(userID)
-	return args.Get(0).([]domain.Notification), args.Error(1)
-}
-
-// Mock UserRepository
-type MockUserRepositorys struct {
-	mock.Mock
-}
-
-func (m *MockUserRepositorys) ExistsByID(id int) (bool, error) {
-	args := m.Called(id)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockUserRepositorys) CreateUser(user domain.User) (domain.User, error) {
-	args := m.Called(user)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-func (m *MockUserRepositorys) GetAllUsers() ([]domain.User, error) {
-	args := m.Called()
-	return args.Get(0).([]domain.User), args.Error(1)
-}
-
-func (m *MockUserRepositorys) GetUserByID(id int) (domain.User, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.User), args.Error(1)
-}
 
 // func TestQueueBroadcastNotification(t *testing.T) {
 // 	mockJobRepo := new(MockJobRepository)
@@ -97,9 +41,47 @@ func (m *MockUserRepositorys) GetUserByID(id int) (domain.User, error) {
 // 	mockJobRepo.AssertExpectations(t)
 // }
 
+func TestJobService_QueueBroadcastNotification(t *testing.T) {
+	jobRepo := new(mocks.JobRepository)
+	notificationRepo := new(mocks.NotificationRepository)
+	userRepo := new(mocks.UserRepository)
+	rabbitMQChannel := new(mocks.RabbitMQChannel)
+
+	// Create an instance of the JobService with the mocked dependencies
+	service := service.NewJobService(jobRepo, notificationRepo, userRepo, rabbitMQChannel)
+
+	// Define the job and expected behavior
+	message := "Test Broadcast Message"
+	job := domain.Job{
+		ID:       1,
+		Message:  message,
+		Status:   "queued",
+		QueuedAt: time.Now(),
+	}
+
+	jobRepo.On("CreateJob", mock.AnythingOfType("domain.Job")).Return(job, nil)
+
+	// Mock the Publish method
+	payload, _ := json.Marshal(map[string]interface{}{"job_id": job.ID, "message": message})
+	rabbitMQChannel.On("Publish", "", "broadcast_queue", false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        payload,
+	}).Return(nil)
+
+	// Call the QueueBroadcastNotification method
+	result, err := service.QueueBroadcastNotification(message)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, job.ID, result.ID)
+	assert.Equal(t, "queued", result.Status)
+	jobRepo.AssertExpectations(t)
+	rabbitMQChannel.AssertExpectations(t)
+}
+
 func TestGetJobStatus(t *testing.T) {
-	mockJobRepo := new(MockJobRepository)
-	service := NewJobService(mockJobRepo, nil, nil, nil)
+	mockJobRepo := new(mocks.JobRepository)
+	service := service.NewJobService(mockJobRepo, nil, nil, nil)
 
 	// Mock data
 	job := domain.Job{

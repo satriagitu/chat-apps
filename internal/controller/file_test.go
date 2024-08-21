@@ -1,9 +1,11 @@
 // controller/file_controller_test.go
-package controller
+package controller_test
 
 import (
 	"bytes"
+	"chat-apps/internal/controller"
 	"chat-apps/internal/domain"
+	"chat-apps/mocks"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,24 +17,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockFileService
-type MockFileService struct {
-	mock.Mock
-}
-
-func (m *MockFileService) UploadFile(userID int, fileURL string) (domain.File, error) {
-	args := m.Called(userID, fileURL)
-	return args.Get(0).(domain.File), args.Error(1)
-}
-
-func (m *MockFileService) GetFileByID(id int) (domain.File, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.File), args.Error(1)
-}
-
 func TestUploadFile(t *testing.T) {
-	mockFileService := new(MockFileService)
-	fileController := NewFileController(mockFileService)
+	mockFileService := new(mocks.FileService)
+	fileController := controller.NewFileController(mockFileService)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
@@ -66,8 +53,8 @@ func TestUploadFile(t *testing.T) {
 }
 
 func TestGetFileByID(t *testing.T) {
-	mockFileService := new(MockFileService)
-	fileController := NewFileController(mockFileService)
+	mockFileService := new(mocks.FileService)
+	fileController := controller.NewFileController(mockFileService)
 
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
@@ -92,4 +79,125 @@ func TestGetFileByID(t *testing.T) {
 	assert.Equal(t, float64(1), response["user_id"])
 	assert.Equal(t, "http://example.com/file", response["file_url"])
 	mockFileService.AssertExpectations(t)
+}
+
+func TestUploadFileV2(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("successful upload", func(t *testing.T) {
+		body := domain.File{
+			UserID:  1,
+			FileURL: "http://example.com/file",
+		}
+		jsonValue, _ := json.Marshal(body)
+
+		mockFileService := new(mocks.FileService)
+		mockFileService.On("UploadFile", mock.AnythingOfType("int"), mock.AnythingOfType("string")).Return(body, nil)
+		fileController := controller.NewFileController(mockFileService)
+
+		r := gin.Default()
+		r.POST("/files/upload", fileController.UploadFile)
+
+		req, _ := http.NewRequest(http.MethodPost, "/files/upload", bytes.NewBuffer(jsonValue))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		// start test
+		t.Log("[response]:", resp.Body.String())
+		var responseBody map[string]interface{}
+		json.Unmarshal(resp.Body.Bytes(), &responseBody)
+		assert.Equal(t, http.StatusOK, resp.Code)
+		assert.Equal(t, float64(1), responseBody["user_id"])
+		assert.Equal(t, "http://example.com/file", responseBody["file_url"])
+	})
+
+	t.Run("invalid json - bad request", func(t *testing.T) {
+		mockFileService := new(mocks.FileService)
+		fileController := controller.NewFileController(mockFileService)
+
+		r := gin.Default()
+		r.POST("/files/upload", fileController.UploadFile)
+
+		req, _ := http.NewRequest(http.MethodPost, "/files/upload", bytes.NewBuffer([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		// start test
+		t.Log("[response]:", resp.Body.String())
+		assert.Equal(t, http.StatusBadRequest, resp.Code)
+		var responseBody map[string]interface{}
+		json.Unmarshal(resp.Body.Bytes(), &responseBody)
+		assert.Contains(t, responseBody["error"], "bad request")
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		body := gin.H{
+			"user_id": 1,
+			"file":    "http://example.com/file",
+		}
+		jsonValue, _ := json.Marshal(body)
+
+		mockFileService := new(mocks.FileService)
+		mockFileService.On("UploadFile", mock.AnythingOfType("int"), mock.AnythingOfType("string")).Return(domain.File{}, assert.AnError)
+		fileController := controller.NewFileController(mockFileService)
+
+		r := gin.Default()
+		r.POST("/files/upload", fileController.UploadFile)
+
+		req, _ := http.NewRequest(http.MethodPost, "/files/upload", bytes.NewBuffer(jsonValue))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		// start test
+		t.Log("[response]:", resp.Body.String())
+		assert.Equal(t, http.StatusInternalServerError, resp.Code)
+		var responseBody map[string]interface{}
+		json.Unmarshal(resp.Body.Bytes(), &responseBody)
+		assert.Contains(t, responseBody["error"], "internal server error")
+	})
+}
+
+func TestGetFileV2(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("invalid file id - bad request", func(t *testing.T) {
+		mockFileService := new(mocks.FileService)
+		fileController := controller.NewFileController(mockFileService)
+
+		r := gin.Default()
+		r.GET("/files/:id", fileController.GetFileByID)
+
+		req, _ := http.NewRequest(http.MethodGet, "/files/abc", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		// start test
+		t.Log("[response]:", resp.Body.String())
+		assert.Equal(t, http.StatusBadRequest, resp.Code)
+		var responseBody map[string]interface{}
+		json.Unmarshal(resp.Body.Bytes(), &responseBody)
+		assert.Contains(t, responseBody["error"], "Invalid file ID")
+	})
+
+	t.Run("service error - internal server error", func(t *testing.T) {
+		mockFileService := new(mocks.FileService)
+		mockFileService.On("GetFileByID", mock.AnythingOfType("int")).Return(domain.File{}, assert.AnError)
+		fileController := controller.NewFileController(mockFileService)
+		r := gin.Default()
+		r.GET("/files/:id", fileController.GetFileByID)
+
+		req, _ := http.NewRequest(http.MethodGet, "/files/1", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		// start test
+		t.Log("[response]:", resp.Body.String())
+		assert.Equal(t, http.StatusInternalServerError, resp.Code)
+		var responseBody map[string]interface{}
+		json.Unmarshal(resp.Body.Bytes(), &responseBody)
+		assert.Contains(t, responseBody["error"], "internal server error")
+	})
 }

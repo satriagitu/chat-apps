@@ -13,9 +13,9 @@ type ArticleRepository struct {
 	mock.Mock
 }
 
-// GetArticleList provides a mock function with given fields:
-func (_m *ArticleRepository) GetArticleList() ([]domain.ArticleList, error) {
-	ret := _m.Called()
+// GetArticleList provides a mock function with given fields: search
+func (_m *ArticleRepository) GetArticleList(search string) ([]domain.ArticleList, error) {
+	ret := _m.Called(search)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetArticleList")
@@ -23,19 +23,19 @@ func (_m *ArticleRepository) GetArticleList() ([]domain.ArticleList, error) {
 
 	var r0 []domain.ArticleList
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]domain.ArticleList, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(string) ([]domain.ArticleList, error)); ok {
+		return rf(search)
 	}
-	if rf, ok := ret.Get(0).(func() []domain.ArticleList); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) []domain.ArticleList); ok {
+		r0 = rf(search)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.ArticleList)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(search)
 	} else {
 		r1 = ret.Error(1)
 	}

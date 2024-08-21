@@ -2,6 +2,7 @@ package controller
 
 import (
 	"chat-apps/internal/service"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,13 +24,13 @@ func (fc *FileController) UploadFile(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
 	file, err := fc.FileService.UploadFile(req.UserID, req.File)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -50,7 +51,7 @@ func (fc *FileController) GetFileByID(c *gin.Context) {
 
 	file, err := fc.FileService.GetFileByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprint("internal server error: ", err.Error())})
 		return
 	}
 

@@ -2,11 +2,13 @@ package infrastructure
 
 import (
 	"chat-apps/internal/controller"
-	"chat-apps/internal/rabbitmq"
 	"chat-apps/internal/repository"
 	"chat-apps/internal/service"
+	"chat-apps/internal/third_party"
 	"chat-apps/internal/util"
+	"context"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,10 +19,12 @@ func NewRouter() *gin.Engine {
 		panic(err)
 	}
 
-	_, ch, q, err := rabbitmq.InitRabbitMQ()
+	rabbit, err := third_party.NewRabbitMQ()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	rdb := third_party.InitRedis()
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
@@ -41,7 +45,7 @@ func NewRouter() *gin.Engine {
 	jobRepo := repository.NewJobRepository(db)
 	notificationRepo := repository.NewNotificationRepository(db)
 
-	jobService := service.NewJobService(jobRepo, notificationRepo, userRepo, ch)
+	jobService := service.NewJobService(jobRepo, notificationRepo, userRepo, rabbit.Channel)
 	notificationService := service.NewNotificationService(notificationRepo, userRepo)
 
 	jobController := controller.NewJobController(jobService)
@@ -50,6 +54,13 @@ func NewRouter() *gin.Engine {
 	artikeRepo := repository.NewArtikelRepository(db)
 	artikelService := service.NewArtikelService(artikeRepo)
 	artikelController := controller.NewArticleController(artikelService)
+
+	externalPostController := controller.NewExternalPostController(os.Getenv("ExternalAPI"))
+
+	ctx := context.Background()
+	cacheRepo := repository.NewRedisRepository(rdb, ctx)
+	cacheService := service.NewCacheService(cacheRepo)
+	cacheController := controller.NewCacheController(cacheService)
 
 	r := gin.Default()
 
@@ -73,8 +84,13 @@ func NewRouter() *gin.Engine {
 
 	r.GET("/article-list", artikelController.GetArticleList)
 
+	r.GET("/external-post", externalPostController.GetExternalPosts)
+
+	r.POST("/cache-redis", cacheController.SetCache)
+	r.GET("/cache-redis/:key", cacheController.GetCache)
+
 	notificationWorker := util.NewNotificationWorker(notificationRepo, userRepo, jobRepo)
-	if err := rabbitmq.StartConsumer(ch, q.Name, notificationWorker); err != nil {
+	if err := rabbit.StartConsumer(rabbit.Queue.Name, notificationWorker); err != nil {
 		log.Fatal(err)
 	}
 
