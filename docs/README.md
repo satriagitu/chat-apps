@@ -1,17 +1,17 @@
 # Chat Application
 
-## Deskripsi
+## Description
 
-Chat Application adalah aplikasi chat yang memungkinkan pengguna untuk mengirim pesan, berkomunikasi dalam percakapan, dan mengelola notifikasi serta file. Aplikasi ini menggunakan Go dengan Gin sebagai framework HTTP, GORM untuk ORM, dan RabbitMQ untuk antrian tugas latar belakang.
+Chat Application is a chat platform that allows users to send messages, communicate within conversations, and manage notifications and files. The application is built using Go with Gin as the HTTP framework, GORM for ORM, and RabbitMQ for background task queues.
 
 ## Fitur
 
-- **Pengguna**: Mengelola pengguna dengan endpoint untuk membuat dan mendapatkan informasi pengguna.
-- **Notifikasi**: Mengirim dan mengambil notifikasi untuk pengguna.
-- **Pesan**: Mengirim dan mengambil pesan dalam percakapan.
-- **File**: Mengunggah dan mendapatkan file.
-- **Percakapan**: Membuat dan mendapatkan percakapan.
-- **Antrian Tugas**: Memproses notifikasi siaran menggunakan RabbitMQ.
+- **Pengguna**: Manage users with endpoints for creating and retrieving user information.
+- **Notifikasi**: Send and retrieve notifications for users.
+- **Pesan**: Send and retrieve messages within conversations.
+- **File**: Upload and retrieve files.
+- **Percakapan**: Create and retrieve conversations.
+- **Antrian Tugas**: Process broadcast notifications using RabbitMQ.
 
 ## Prasyarat
 Install:
