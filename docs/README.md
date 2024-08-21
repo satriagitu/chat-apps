@@ -6,12 +6,12 @@ Chat Application is a chat platform that allows users to send messages, communic
 
 ## Fitur
 
-- **Pengguna**: Manage users with endpoints for creating and retrieving user information.
-- **Notifikasi**: Send and retrieve notifications for users.
-- **Pesan**: Send and retrieve messages within conversations.
+- **User**: Manage users with endpoints for creating and retrieving user information.
+- **Notification**: Send and retrieve notifications for users.
+- **Message**: Send and retrieve messages within conversations.
 - **File**: Upload and retrieve files.
-- **Percakapan**: Create and retrieve conversations.
-- **Antrian Tugas**: Process broadcast notifications using RabbitMQ.
+- **Conversations**: Create and retrieve conversations.
+- **Queue Task**: Process broadcast notifications using RabbitMQ.
 
 ## Prasyarat
 Install:
